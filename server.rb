@@ -2,6 +2,7 @@ require 'socket'
 require 'uri'
 require 'cgi'
 require 'byebug'
+require 'erb'
 
 def handle_connection(socket)
   message = socket.gets
@@ -12,36 +13,32 @@ def handle_connection(socket)
 
   cgi = CGI.parse(uri.query.to_s)
 
-  puts cgi.to_s
-
   response = 
     case address
     when '/'
-      <<-RESPONSE  
-        <h1>Available Routes:</h1>
-        <ul>
-          <li>/</li>
-          <li>/hello_world</li>
-          <li>/foobar</li>
-        </ul>
-      RESPONSE
+      template = ERB.new(File.read('templates/index.html.erb'))
+      [200, template.result]
     when '/hello_world'
-      "<h1>Hello world</h1>"
+      template = ERB.new(File.read('templates/hello_world.html.erb'))
+      [200, template.result]
     when /^\/foobar/
       foos = Array(cgi["foos"])[0].to_s
       bars = Array(cgi["bars"])[0].to_s
-      result = "<div>Foos: #{foos}</div>"
-      result << "<div>Bars: #{bars}</div>"
+      template = ERB.new(File.read('templates/foobar.html.erb'))
+      [200, template.result]
+    else
+      template = ERB.new(File.read('templates/404.html.erb'))
+      [404, template.result]
     end
 
-  socket.print "HTTP/1.1 200 OK\r\n" +
+  socket.print "HTTP/1.1 #{response[0]} OK\r\n" +
                "Content-Type: text/html\r\n" +
-               "Content-Length: #{response.bytesize}\r\n" +
+               "Content-Length: #{response[1].bytesize}\r\n" +
                "Connection: close\r\n"
 
   socket.print "\r\n"
 
-  socket.print "#{response}\r\n"
+  socket.print "#{response[1]}\r\n"
 
   socket.close
 end
