@@ -1,9 +1,18 @@
 require 'socket'
+require 'uri'
+require 'cgi'
+require 'byebug'
 
 def handle_connection(socket)
   message = socket.gets
 
   verb, address, protocol = message.split(' ')
+
+  uri = URI.parse(address.to_s)
+
+  cgi = CGI.parse(uri.query.to_s)
+
+  puts cgi.to_s
 
   response = 
     case address
@@ -16,6 +25,13 @@ def handle_connection(socket)
           <li>/foobar</li>
         </ul>
       RESPONSE
+    when '/hello_world'
+      "<h1>Hello world</h1>"
+    when /^\/foobar/
+      foos = Array(cgi["foos"])[0].to_s
+      bars = Array(cgi["bars"])[0].to_s
+      result = "<div>Foos: #{foos}</div>"
+      result << "<div>Bars: #{bars}</div>"
     end
 
   socket.print "HTTP/1.1 200 OK\r\n" +
