@@ -1,0 +1,19 @@
+<p>Print x foos and y bars as a list of items.</p>
+
+<p>
+  Foos: <%= params_hash['foos'] || 0 %>
+  <br/>Bars: <%= params_hash['bars'] || 0 %>
+</p>
+
+<p>
+  <% 1.upto(params_hash['foos'].to_i) do |i| %>
+    foo <%= i %></br>
+  <% end %>
+</p>
+
+<p>
+  <% 1.upto(params_hash['bars'].to_i) do |i| %>
+    bar <%= i %><br/>
+  <% end %>
+</p>
+
